@@ -9,7 +9,6 @@ import math
 from FixedParameters import TRAIN_SPLIT, PREVIOUS_STEPS
 from keras.models import load_model
 
-
 # -----------------------------------------------------------------------------
 # 1. CHOOSING A VARIABLE TO PREDICT 
 var_to_predict = input(f'Choose a model from the following list\n {CORR_GROUP.keys()}: ')

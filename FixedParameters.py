@@ -8,7 +8,7 @@ PREVIOUS_STEPS = 30
 
 TRAINING = {
     'EPOCHS': 100,
-    'BATCH_SIZE': 32
+    'BATCH_SIZE': 50
 }
 
 # Optimizer used by the algorithm through it's epochs to minimize the cost function

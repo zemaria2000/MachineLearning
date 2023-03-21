@@ -125,6 +125,7 @@ def build_model(hp):
                   loss = 'mean_squared_error',
                   metrics = ['accuracy'])
     
+    
     return model
 
 
