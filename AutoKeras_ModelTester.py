@@ -4,22 +4,22 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score, d2_pinball_score
-from settings import CORR_GROUP, DATA_DIR
 import math
-from FixedParameters import TRAIN_SPLIT, PREVIOUS_STEPS
+from settings import TRAIN_SPLIT, PREVIOUS_STEPS, VARIABLES, DATA_DIR
 from keras.models import load_model
+from sklearn.preprocessing import MinMaxScaler
 
 # -----------------------------------------------------------------------------
 # 1. CHOOSING A VARIABLE TO PREDICT 
-var_to_predict = input(f'Choose a model from the following list\n {CORR_GROUP.keys()}: ')
-if var_to_predict not in CORR_GROUP.keys():
+var_to_predict = input(f'Choose a model from the following list\n {VARIABLES}: ')
+if var_to_predict not in VARIABLES:
     print("Model spelt incorretly / model doesn't exist in the list given")
-    var_to_predict = input(f"Please select a model from the list \n {CORR_GROUP.keys()}: ")
+    var_to_predict = input(f"Please select a model from the list \n {VARIABLES}: ")
 
 
 # -----------------------------------------------------------------------------
 # 2. LOADING THE MODEL TRAINED
-model = load_model(f'{var_to_predict}.h5')
+model = load_model(f'models/{var_to_predict}.h5')
 
 
 # -----------------------------------------------------------------------------
@@ -30,6 +30,11 @@ input_df.rename(columns = {'Unnamed: 0': 'Date'}, inplace = True)
 df = input_df[['Date', f'{var_to_predict}']]
 # Converting the date
 df['Date'] = pd.to_datetime(df['Date'])
+
+#----------------------------------------------------------------------------------------------------------------------------
+# NORMALIZING THE DATA
+scaler = MinMaxScaler()
+df[f'{var_to_predict}'] = scaler.fit_transform(np.array(df[f'{var_to_predict}']).reshape(-1, 1))
 
 
 # -----------------------------------------------------------------------------
@@ -88,6 +93,5 @@ plt.title('Comparison between real and predicted data')
 plt.legend(['Real Values', 'Predicted Values'])
 # plt.savefig(f"{FIGURES_DIR}{model}_RealVSPrediction.png")
 plt.show()
-
 
 

@@ -2,9 +2,10 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 from settings import DATA_DIR
-from FixedParameters import TRAIN_SPLIT, PREVIOUS_STEPS, TRAINING, VARIABLES
+from settings import TRAIN_SPLIT, PREVIOUS_STEPS, TRAINING, VARIABLES
 import keras_tuner as kt
 from keras_tuner import HyperParameters as hp
+from sklearn.preprocessing import MinMaxScaler
 
 
 # 1. CHOOSING WHICH OF PEDRO'S VARIABLES I WANT TO PREDICT
@@ -33,6 +34,11 @@ df['Date'] = pd.to_datetime(df['Date'])
 train_data_size = int(TRAIN_SPLIT * len(df)) 
 train_data = df[:train_data_size]
 test_data = df[train_data_size:len(df)]
+
+#----------------------------------------------------------------------------------------------------------------------------
+# NORMALIZING THE DATA
+scaler = MinMaxScaler()
+df[f'{var_to_predict}'] = scaler.fit_transform(np.array(df[f'{var_to_predict}']).reshape(-1, 1))
 
 # Function that divides our dataset according to the previous_steps number
 # watch this - https://www.youtube.com/watch?v=6S2v7G-OupA&t=888s&ab_channel=DigitalSreeni
@@ -130,7 +136,7 @@ def build_model(hp):
 #                      )
 tuner = kt.BayesianOptimization(build_model,
                      objective = 'val_loss',
-                     max_trials = 20, 
+                     max_trials = 100, 
                      directory = 'AutoML_Experiments',
                      project_name = 'Project',
                      overwrite = True
@@ -145,8 +151,8 @@ early_stop = tf.keras.callbacks.EarlyStopping(
     mode = 'min',
     restore_best_weights = True)
 # Defining a callback that saves our model
-cp = tf.keras.callbacks.ModelCheckpoint(filepath = f"{var_to_predict}.h5",
-                                mode = 'min', monitor = 'val_loss', verbose =2 , save_best_only = True)
+cp = tf.keras.callbacks.ModelCheckpoint(filepath = f"models/{var_to_predict}.h5",
+                                mode = 'min', monitor = 'val_loss', verbose = 2 , save_best_only = True)
 # Initializing the tuner search - that will basically iterate over a certain number of different combinations (defined in the tuner above)
 tuner.search(train_X, train_y, epochs = 20, validation_split = 0.1, callbacks = [early_stop])
 
@@ -161,7 +167,7 @@ best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
 # CREATING THE RESPECTIVE MODELmodel
 model = tuner.hypermodel.build(best_hps)
 # fitting/training the final model
-history = model.fit(train_X, train_y, epochs = TRAINING['EPOCHS'], validation_split = 0.2, callbacks = [early_stop, cp]).history
+history = model.fit(train_X, train_y, epochs = TRAINING['EPOCHS'], validation_split = 0.15, callbacks = [early_stop, cp]).history
 # summary with the model's  features
 model.summary()
 
